@@ -1,7 +1,9 @@
 ## Survival Analysis using the "flchain" Dataset
 # Overview
-The analysis is done using data coming from bone marrow samples, the focus is on two particular proteins involved in the body's immune responce. The proteins are called "Serum free light chains (FLC)" (type Kappa and type Lambda). In plasma cells of the bone marrow the concentration of the two proteins is balanced, in normal circumstances. However, in certain disease conditions, such as multiple myeloma or other plasma cell disorders, the production of one type of FLC may increase. 
+The analysis is done using data coming from bone marrow samples, the focus is on two particular proteins involved in the body's immune responce. The proteins are called "Serum free light chains (FLC)" (type Kappa and type Lambda). In plasma cells of the bone marrow the concentration of the two proteins is balanced, in normal circumstances. However, in certain disease conditions, such as multiple myeloma or other plasma cell disorders, the production of one type of FLC may increase.  
+
 Serum free light chains (FLCs) are typically measured using a laboratory test called serum protein electrophoresis (SPEP). SPEP is a type of blood test that separates the different proteins in the blood based on their electrical charge and size. During the test, a small amount of blood is drawn from the patient and placed on a special gel. An electrical current is then applied to the gel, which causes the proteins to move along the gel at different speeds based on their charge and size.
+
 The data is taken from residents of the county of Omlster (Rochester) in Minnesota, the study was done on 2/3 of the population aged over 50 years. 
 
 # Goals
