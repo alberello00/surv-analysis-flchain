@@ -23,54 +23,18 @@ summary(flchain)
 # Let's try something
 #### Lab 1 (leukemia) ####
 #Change into a survival variable
-g<-Surv(flchain$age,flchain$death)
+g <- Surv(flchain$futime, flchain$death)
 class(g)
+
 #Kaplan-Meier est
-result.km<- survfit(g~ 1, conf.type = "log-log")
+result.km <- survfit(g ~ 1, conf.type = "log-log")
 result.km
 summary(result.km)
-
-# Standard errors
-d_j <- result.km$n.event[result.km$n.event!=0]  #
-r_j <- result.km$n.risk[result.km$n.event!=0]
-S_t <- result.km$surv[result.km$n.event!=0]
-to.sum <- d_j/(r_j*(r_j-d_j))
-se <- sqrt(S_t[1]^2*to.sum[1])
-for(i in 2:length(r_j)){
-  se[i] <- sqrt(S_t[i]^2*sum(to.sum[1:i]))
-}
-round(se,4)
-summary(result.km)
-
-# log-log confidence interval   
-se_cloglog <- sqrt(1/log(S_t[1])^2*to.sum[1])
-for(i in 2:length(r_j)){
-  se_cloglog[i] <- sqrt(1/log(S_t[i])^2*sum(to.sum[1:i]))
-}
-A_t <- qnorm(0.975)*se_cloglog
-round(S_t^exp(A_t),3)
-round(S_t^exp(-A_t),3)
-summary(result.km)
-
-# median 
-plot(result.km)
-abline(h = 0.5, col = "red", lty = 3)
-
-quantile(result.km )
-abline(v = c(quantile(result.km)$quantile[2],
-             quantile(result.km)$lower[2],
-             quantile(result.km)$upper[2]), col = "red",lty = 3)
-
-# 1st quartile
-plot(result.km)
-abline(h=0.75, col="red",lty=3)
-abline(v=c(quantile(result.km)$quantile[1],
-           quantile(result.km)$lower[1],
-           quantile(result.km)$upper[1]), col="red",lty=3)
+plot(result.km, ylim = c(0.6, 1))
 
 # Fleming-Harringon (Nelson-Aalen) estimator
 ?survfit
-result.na <- survfit(g ~ 1, conf.type="log-log",stype=2)
+result.na <- survfit(g ~ 1, conf.type="log-log", stype=2)
 summary(result.na)
 
 # cumulative hazard and corresponding standard error
