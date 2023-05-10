@@ -13,12 +13,11 @@ univariate_km = function(var) {
 
 #  we will not include variables: chapter (too many level)
 
-
 # age
 age_quantile <- cut(age, quantile(age), include.lowest =  T)
 age_death = univariate_km(age_quantile)
 plot(age_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of age quantiles')
-legend("bottomleft", legend = c("[50,55)", "[55,63)", "[63, 72)", "[72, 101)"), lty = 1:2, col = c('red', 'blue', 'black', 'green'))
+legend("bottomleft", legend = c("[50,55]", "(55,63]", "(63, 72]", "(72, 101]"), lty = 1:2, col = c('red', 'blue', 'black', 'green'))
 
 
 # sex
@@ -61,14 +60,28 @@ legend("bottomleft", legend = c(0,1), col = c('red', 'blue'), lty = 1:2, horiz =
 
 
 ### QUESTION 2 
-# Cox model
-# dicotomous covariate
-cox1 <- coxph(surv_object ~ death)
-cox1
+## Univariate Cox model
+# binary covariate
+surv_object = Surv(futime, death)
 
-# continuous covariate
-cox2 <- coxph(surv_object ~ age)
-cox2
+cox_age <- coxph(formula = surv_object ~ sex)
+cox_age # since coef is > 0 we can state that males have 9% more risk of death 
+
+cox_mgus = coxph(formula = surv_object ~ mgus)
+cox_mgus # positive factor so you have 60% less risk of death (careful because it is unbalanced)
+
+# complete model
+cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa_quantile + lambda_quantile + flc.grp + creatinine_quanitle + mgus)
+summary(cox_multi)
+
+install.packages("mfp")
+library(mfp)
+
+mfp=mfp(surv_object ~ fp(age) + ethn + qual1+qual2+voc+marr+child, family=cox, 
+        method="breslow",verbose=T, select=1, alpha=0.05, data=DB)
+
+
+
 
 # changing the baseline (continuous covariate)
 cox2b <- coxph(surv_object ~ I(age - 35))
