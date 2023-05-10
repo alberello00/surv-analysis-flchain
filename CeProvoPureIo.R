@@ -48,7 +48,6 @@ legend("bottom", legend = c(1,2,3,4,5,6,7,8,9,10), col = c('red', 'blue', 'black
 
 
 # creatinine
-#  [0.4,0.9] (0.9,1] (1,1.2] (1.2,10.8]
 creatinine_quanitle = cut(creatinine, quantile(creatinine, na.rm = T), include.lowest =  T)
 creatinine_death = univariate_km(creatinine_quanitle)
 plot(creatinine_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of creatinine', ylim=c(0.4, 1))
