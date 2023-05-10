@@ -1,0 +1,62 @@
+---
+title: "flchain"
+output: html_document
+date: "2023-05-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Import the libraries
+In those lines we import the library needed for the analysis: in particular, survival contains the dataset used; foreign is used for... ; survminer is used for...
+
+```{r}
+library(survival)
+library(foreign)
+library(survminer)
+
+
+```
+
+
+## Including Plots
+In this section we present the plots of the analysis 
+```{r}
+
+
+
+
+```
+
+
+### Task 1
+In this section we performed the analysis for each covariate and make the estimation of the Cox regression model. 
+ 
+```{r}
+
+```
+
+### Task 2
+In this section we estimate the hazard ratio and the corresponding 95% confidence interval for the complete model
+```{r}
+
+```
+
+### Task 3
+Run the backward selection algorithm and check if it satisfies the PH assumption
+
+```{r}
+
+```
+
+
+
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
