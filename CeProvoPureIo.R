@@ -30,7 +30,7 @@ class(g)
 result.km <- survfit(g ~ 1, conf.type = "log-log")
 result.km
 summary(result.km)
-plot(result.km, ylim = c(0.6, 1))
+plot(result.km, ylim = c(0.6, 1), col='blue')
 
 # Fleming-Harringon (Nelson-Aalen) estimator
 ?survfit
