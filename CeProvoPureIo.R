@@ -11,7 +11,7 @@ univariate_km = function(var) {
   return(result_km)
 }
 
-#  we will not include variables: kappa, lambda (condensed into flc.grp), and chapter (too many level)
+#  we will not include variables: chapter (too many level)
 
 
 # age
@@ -21,20 +21,28 @@ plot(age_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "fol
 legend("bottomleft", legend = c("[50,55)", "[55,63)", "[63, 72)", "[72, 101)"), lty = 1:2, col = c('red', 'blue', 'black', 'green'))
 
 
-# sample.yr
-sample.yr_death = univariate_km(sample.yr)
-plot(sample.yr_death, col = c('red', 'blue', 'black', 'green', 'red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of sample.yr quantiles', ylim=c(0.60,1))
-legend("bottomleft", legend = c(1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003 ), col = c('red', 'blue', 'black', 'green', 'red', 'blue', 'black', 'green'), lty = 1:2, horiz=T, cex = 0.6)
-
-
 # sex
 sex_death = univariate_km(sex)
 plot(sex_death, col = c('red', 'blue'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of sex', ylim=c(0.65, 1))
 legend("bottomleft", legend = c('M', 'F'), col = c('red', 'blue'), lty = 1:2, horiz = T)
 
 
+# kappa
+kappa_quantile = cut(kappa, quantile(kappa), include.lowest =  T)
+kappa_death = univariate_km(kappa_quantile)
+plot(kappa_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of kappa', ylim=c(0.3, 1))
+legend("bottomleft", legend = c('[0.01,0.96]', '(0.96,1.27]', '(1.27,1.68]', '(1.68,20.5]'), col = c('red', 'blue', 'black', 'green'), lty = 1:2, horiz = T, cex = 0.8 )
+
+
+# lambda
+lambda_quantile = cut(lambda, quantile(lambda), include.lowest =  T)
+lambda_death = univariate_km(lambda_quantile)
+plot(lambda_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of lambda', ylim=c(0.3, 1))
+legend("bottomleft", legend = c('[0.04,1.2]', '(1.2,1.51]', '(1.51,1.92]', '(1.92,26.6]'), col = c('red', 'blue', 'black', 'green'), lty = 1:2, horiz = T, cex = 0.8 )
+
+
 # flc.gpr
-flc.grp_death = univariate_km(flc.grp)
+flc.grp_death = univariate_km(flc.grp) # log-rang diviso in prime 5 seconde 5
 plot(flc.grp_death, col = c('red', 'blue', 'black', 'green', 'purple', 'red', 'blue', 'black', 'green', 'purple'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of flc.grp', ylim=c(0.2, 1))
 legend("bottom", legend = c(1,2,3,4,5,6,7,8,9,10), col = c('red', 'blue', 'black', 'green', 'purple', 'red', 'blue', 'black', 'green', 'purple'), lty = 1:2, horiz = T, cex = 0.65)
 
@@ -51,6 +59,66 @@ legend("bottomleft", legend = c("[0.4,0.9]", "(0.9,1]", "(1,1.2]", "(1.2,10.8]")
 mgus_death = univariate_km(mgus)
 plot(mgus_death, col = c('red', 'blue'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of mgus', ylim=c(0.6, 1))
 legend("bottomleft", legend = c(0,1), col = c('red', 'blue'), lty = 1:2, horiz = T, cex = 1)
+
+
+### QUESTION 2 
+# Cox model
+# dicotomous covariate
+cox1 <- coxph(surv_object ~ death)
+cox1
+
+# continuous covariate
+cox2 <- coxph(surv_object ~ age)
+cox2
+
+# changing the baseline (continuous covariate)
+cox2b <- coxph(surv_object ~ I(age - 35))
+cox2b
+
+# age classes
+table(age_quantile)
+
+cox3 <- coxph(surv_object ~ age_quantile)
+cox3
+
+plot(survfit(surv_object ~ age_quantile), col=1:4,lty=1:4, xlab="Months", ylab="Estimated S(t)")
+legend("topright", legend = levels(age_quantile), lty = 1:4,col=1:4,title = "Age")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
