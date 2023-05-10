@@ -16,8 +16,8 @@ The dataset contains the following variables:
 - sample.yr: year of sample collection
 - kappa: serum kappa free light chain (FLC) concentration (mg/L)
 - lambda: serum lambda FLC concentration (mg/L)
-- flc.grp: FLC group (based on the ratio of kappa to lambda FLC concentrations)
-- creatinine: serum creatinine concentration (mg/dL)
+- flc.grp: FLC group (based on the ratio of kappa to lambda FLC concentrations). In normal conditions, the ratio should be among (0.25, 1.90).
+- creatinine: serum creatinine concentration (mg/dL). High levels of creatinine in blood's molecules are sympthom of bad functioning of the kidneys.
 - mgus: monoclonal gammopathy of undetermined significance (MGUS) status (yes or no)
 - futime: follow-up time in days from sample collection to death or censoring
 - death: indicator variable for death (1 if death occurred during follow-up, 0 if subject was censored)
