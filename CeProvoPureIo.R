@@ -1,7 +1,5 @@
 library(survival)
 data("flchain")
-flchain
-summary(flchain)
 
 # La gammopatia monoclonale è una patologia rara, caratterizzata dall'accumulo nel midollo osseo
 # e nel sangue di una proteina anomala (paraproteina, proteina monoclonale o M proteina). --> Patologia cancerogena
@@ -23,14 +21,51 @@ summary(flchain)
 # Let's try something
 #### Lab 1 (leukemia) ####
 #Change into a survival variable
-g <- Surv(flchain$futime, flchain$death)
-class(g)
 
-#Kaplan-Meier est
-result.km <- survfit(g ~ 1, conf.type = "log-log")
-result.km
-summary(result.km)
-plot(result.km, ylim = c(0.6, 1), col='blue')
+flchain$age = as.integer(flchain$age)
+flchain$sex = as.integer(flchain$sex) 
+flchain$sample.yr = as.integer(flchain$sample.yr)
+flchain$kappa = as.integer(flchain$kappa)
+flchain$lambda = as.integer(flchain$lambda)
+flchain$flc.grp = as.integer(flchain$flc.grp)
+flchain$creatinine = as.integer(flchain$creatinine)
+flchain$mgus = as.integer(flchain$mgus)
+
+univariate_km = function(var) {
+  surv_object <- Surv(var, death)
+  result_km <- survfit(surv_object ~ 1, conf.type = "log-log")
+  
+  return(result_km)
+}
+
+#  we will not include variables: chapter, kappa, lambda (last two condensed into flc.grp)
+# variables_of_interest = c(age, sex, sample.yr, flc.grp, creatinine, mgus, futime, chapter)
+
+age_death = univariate_km(age)
+sex_death = univariate_km(sex)
+sample.yr_death = univariate_km(sample.yr)
+flc.grp_death = univariate_km(flc.grp)
+creatinine_death = univariate_km(creatinine)
+mgus_death = univariate_km(mgus)
+futime_death = univariate_km(futime)
+chapter_death = univariate_km(chapter)
+
+plot(age_death,col='black', lty = 1, xlab = "AGE", ylab = "estimated S(t)", main = 'Survival function as a function of AGE')
+plot(sex_death,col='black', lty = 1, xlab = "SEX", ylab = "estimated S(t)", main = 'Survival function as a function of SEX')
+plot(sample.yr_death,col='black', lty = 1, xlab = "SEX", ylab = "estimated S(t)", main = 'Survival function as a function of SEX')
+plot(sample.yr_death,col='black', lty = 1, xlab = "SEX", ylab = "estimated S(t)", main = 'Survival function as a function of SEX')
+
+# legend("topright", legend = c("treat", "control"), lty = c(1, 2),col=c("black","red"))
+
+
+for (i in 1:8) {
+  
+}
+
+
+
+
+
 
 # Fleming-Harringon (Nelson-Aalen) estimator
 ?survfit
