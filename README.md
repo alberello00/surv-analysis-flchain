@@ -21,6 +21,8 @@ The dataset contains the following variables:
 - mgus: monoclonal gammopathy of undetermined significance (MGUS) status (yes or no)
 - futime: follow-up time in days from sample collection to death or censoring
 - death: indicator variable for death (1 if death occurred during follow-up, 0 if subject was censored)
+- chapter for those who died, a grouping of their primary cause of death by chapter headings of the
+International Code of Diseases ICD-9
 # Requirements
 
 # Acknowledgments
