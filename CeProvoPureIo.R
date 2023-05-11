@@ -1,3 +1,6 @@
+install.packages('survminer')
+install.packages('survival')
+library(survminer)
 library(survival)
 data("flchain")
 attach(flchain)
@@ -59,139 +62,46 @@ plot(mgus_death, col = c('red', 'blue'), lty = 1:2, xlab = "follow up time", yla
 legend("bottomleft", legend = c(0,1), col = c('red', 'blue'), lty = 1:2, horiz = T, cex = 1)
 
 
-### QUESTION 2 
+### QUESTION 2  ##########################################################################
 surv_object = Surv(futime, death)
 
 # complete model
-cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa_quantile + lambda_quantile + flc.grp + creatinine_quanitle + mgus)
+cox_multi <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + creatinine + mgus)
 cox_multi
-extractAIC(cox_multi) # 31337.85
 
-# here we aggregate kappa
-cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda_quantile + flc.grp + creatinine_quanitle + mgus)
-cox_multi
-extractAIC(cox_multi) # 31288.1
+### QUESTION 3 COMMENTING ############################################
 
-# here we aggregate lambda
-cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda + flc.grp + creatinine_quanitle + mgus)
+
+### QUESTION 4 CONF INT
+ggforest(cox_multi, data = flchain)
+summary(cox_multi)$conf.int
+
+
+### QUESTION 5 VARIABLE SELECTION
+anova(cox_multi)
+# here we remove creatinine
+cox_multi <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + mgus)
 cox_multi
-extractAIC(cox_multi) # 31268.46
+anova(cox_multi)
 
 # here we remove mgus
-cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda + flc.grp + creatinine_quanitle)
+cox_multi <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp)
 cox_multi
-extractAIC(cox_multi) # 31267.86
+anova(cox_multi)
 
-# here we aggregate 1st and 2nd quantile of creatinine
-creatinine_quanitle_1 = cut(creatinine, quantile(creatinine, na.rm=T)[c(-2,-1)], include.lowest = T)
-cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda + flc.grp + creatinine_quanitle_1)
+# here we remove kappa
+cox_multi <- coxph(surv_object ~ age + sex + lambda + flc.grp)
 cox_multi
-extractAIC(cox_multi) # 21471.79
+anova(cox_multi)
 
-# here we remove sex and kappa
-creatinine_quanitle_1 = cut(creatinine, quantile(creatinine, na.rm=T)[c(-2,-1)], include.lowest = T)
-cox_multi <- coxph(surv_object ~ age_quantile + lambda + flc.grp + creatinine_quanitle_1)
-cox_multi
-extractAIC(cox_multi) # 21468.69
+ggforest(cox_multi, data = flchain)
 
 
 
-install.packages("mfp")
-library(mfp)
 
-mfp=mfp(surv_object ~ fp(age) + ethn + qual1+qual2+voc+marr+child, family=cox, 
-        method="breslow",verbose=T, select=1, alpha=0.05, data=DB)
 
 
 
 
-# changing the baseline (continuous covariate)
-cox2b <- coxph(surv_object ~ I(age - 35))
-cox2b
-
-# age classes
-table(age_quantile)
-
-cox3 <- coxph(surv_object ~ age_quantile)
-cox3
-
-plot(survfit(surv_object ~ age_quantile), col=1:4,lty=1:4, xlab="Months", ylab="Estimated S(t)")
-legend("topright", legend = levels(age_quantile), lty = 1:4,col=1:4,title = "Age")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Fleming-Harringon (Nelson-Aalen) estimator
-?survfit
-result.na <- survfit(g ~ 1, conf.type="log-log", stype=2)
-summary(result.na)
-
-# cumulative hazard and corresponding standard error
-round(result.na$cumhaz,4)
-round(result.na$std.chaz,4)
-
-plot(result.na)
-abline(h=0.5, col="red",lty=3)
-
-tt_full<-c(tt,1,1,2,2,3,4,4,5,5,8,8,8,8,11,11,12,12,15,17,22,23)
-cens_full<- c(cens, rep(1,21))
-control <- rep(c(0,1), each=21)
-
-results <- survfit(Surv(tt_full, cens_full) ~ control, conf.type="log-log")
-results
-
-summary(results)
-plot(results,col=c("black", "red"),lty = 1:2,xlab = "Weeks", ylab = "estimated S(t)")
-legend("topright", legend = c("treat", "control"), lty = c(1, 2),col=c("black","red"))
-
-quantile(results)
 
 
