@@ -66,8 +66,8 @@ legend("bottomleft", legend = c(0,1), col = c('red', 'blue'), lty = 1:2, horiz =
 surv_object = Surv(futime, death)
 
 # complete model
-cox_multi <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + creatinine + mgus)
-cox_multi
+cox_multi_1 <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + creatinine + mgus)
+cox_multi_1
 
 ### QUESTION 3 COMMENTING ############################################
 
@@ -77,28 +77,35 @@ ggforest(cox_multi, data = flchain)
 summary(cox_multi)$conf.int
 
 
-### QUESTION 5 VARIABLE SELECTION
-anova(cox_multi)
+### QUESTION 5 VARIABLE SELECTION  ###################################
+cox_multi_1
 # here we remove creatinine
-cox_multi <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + mgus)
-cox_multi
-anova(cox_multi)
+cox_multi_2 <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + mgus)
+cox_multi_2
 
 # here we remove mgus
-cox_multi <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp)
-cox_multi
-anova(cox_multi)
+cox_multi_3 <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp)
+cox_multi_3
 
-# here we remove kappa
-cox_multi <- coxph(surv_object ~ age + sex + lambda + flc.grp)
-cox_multi
-anova(cox_multi)
+# here we remove kappa 
+cox_multi_4 <- coxph(surv_object ~ age + sex + lambda + flc.grp)
+cox_multi_4
+anova(cox_multi_4, cox_multi_2) # write some comments about the fact that creatinine has misisng values and therefore we choose as starting model the model without it (otherwise anova does not work)
 
-ggforest(cox_multi, data = flchain)
+ggforest(cox_multi_4, data = flchain)
 
+### QUESTION 6 ###################################
+ph_test <- cox.zph(cox_multi_4, transform = "km")
+ph_test
 
+# acf(ph_test$y[,1], lag.max = 100)
+plot(ph_test[1], col = 'red', lwd = 4)
+plot(ph_test[2], col = 'red', lwd = 4)
+plot(ph_test[3], col = 'red', lwd = 4)
+plot(ph_test[4], col = 'red', lwd = 4)
 
-
+### QUESTION 7   ###################################
+# we do not have variables which violate this the PH assumption
 
 
 
