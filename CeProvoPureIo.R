@@ -17,7 +17,7 @@ univariate_km = function(var) {
 age_quantile <- cut(age, quantile(age), include.lowest =  T)
 age_death = univariate_km(age_quantile)
 plot(age_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of age quantiles')
-legend("bottomleft", legend = c("[50,55]", "(55,63]", "(63, 72]", "(72, 101]"), lty = 1:2, col = c('red', 'blue', 'black', 'green'))
+legend("bottomleft", legend = c("[50,55]", "(55,63]", "(63, 72]", "(72, 101]"), lty = 1:2, col = c('red', 'blue', 'black', 'green'), horiz=T, cex = 0.8)
 
 
 # sex
@@ -43,7 +43,7 @@ legend("bottomleft", legend = c('[0.04,1.2]', '(1.2,1.51]', '(1.51,1.92]', '(1.9
 # flc.gpr
 flc.grp_death = univariate_km(flc.grp) # log-rang diviso in prime 5 seconde 5
 plot(flc.grp_death, col = c('red', 'blue', 'black', 'green', 'purple', 'red', 'blue', 'black', 'green', 'purple'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of flc.grp', ylim=c(0.2, 1))
-legend("bottom", legend = c(1,2,3,4,5,6,7,8,9,10), col = c('red', 'blue', 'black', 'green', 'purple', 'red', 'blue', 'black', 'green', 'purple'), lty = 1:2, horiz = T, cex = 0.65)
+legend("bottom", legend = c(1,2,3,4,5,6,7,8,9,10), col = c('red', 'blue', 'black', 'green', 'purple', 'red', 'blue', 'black', 'green', 'purple'), lty = 1:2, horiz = T, cex = 0.5)
 
 
 # creatinine
@@ -60,19 +60,41 @@ legend("bottomleft", legend = c(0,1), col = c('red', 'blue'), lty = 1:2, horiz =
 
 
 ### QUESTION 2 
-## Univariate Cox model
-# binary covariate
 surv_object = Surv(futime, death)
-
-cox_age <- coxph(formula = surv_object ~ sex)
-cox_age # since coef is > 0 we can state that males have 9% more risk of death 
-
-cox_mgus = coxph(formula = surv_object ~ mgus)
-cox_mgus # positive factor so you have 60% less risk of death (careful because it is unbalanced)
 
 # complete model
 cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa_quantile + lambda_quantile + flc.grp + creatinine_quanitle + mgus)
-summary(cox_multi)
+cox_multi
+extractAIC(cox_multi) # 31337.85
+
+# here we aggregate kappa
+cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda_quantile + flc.grp + creatinine_quanitle + mgus)
+cox_multi
+extractAIC(cox_multi) # 31288.1
+
+# here we aggregate lambda
+cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda + flc.grp + creatinine_quanitle + mgus)
+cox_multi
+extractAIC(cox_multi) # 31268.46
+
+# here we remove mgus
+cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda + flc.grp + creatinine_quanitle)
+cox_multi
+extractAIC(cox_multi) # 31267.86
+
+# here we aggregate 1st and 2nd quantile of creatinine
+creatinine_quanitle_1 = cut(creatinine, quantile(creatinine, na.rm=T)[c(-2,-1)], include.lowest = T)
+cox_multi <- coxph(surv_object ~ age_quantile + sex + kappa + lambda + flc.grp + creatinine_quanitle_1)
+cox_multi
+extractAIC(cox_multi) # 21471.79
+
+# here we remove sex and kappa
+creatinine_quanitle_1 = cut(creatinine, quantile(creatinine, na.rm=T)[c(-2,-1)], include.lowest = T)
+cox_multi <- coxph(surv_object ~ age_quantile + lambda + flc.grp + creatinine_quanitle_1)
+cox_multi
+extractAIC(cox_multi) # 21468.69
+
+
 
 install.packages("mfp")
 library(mfp)
