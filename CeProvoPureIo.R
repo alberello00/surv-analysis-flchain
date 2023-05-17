@@ -1,5 +1,5 @@
-install.packages('survminer')
-install.packages('survival')
+#install.packages('survminer')
+#install.packages('survival')
 library(survminer)
 library(survival)
 data("flchain")
@@ -133,6 +133,31 @@ cox_noph <- coxph(surv_object ~ age + sex + lambda + flc.grp +
                   tt = function(x, t, ...) x * (t))
 
 cox_noph
+
+
+
+#QUESTION 8 #########################################
+
+#this just to show how the resulting scatter plot should be
+#remember that to run the martingale residuals it's needed the model with all the covariates so cox_multi_1
+
+cox_multi_2
+mart.res <- residuals(cox_multi_2, type = "martingale")
+scatter.smooth(mart.res ~ age)
+
+
+#above you can check that the scatter plot present the error value of the different length
+#the martingale residuals should be computed with the complete model 
+#cox_multi_1
+#mart.res <- residuals(cox_multi_1, type = "martingale")
+#scatter.smooth(mart.res ~ age)
+
+
+#scatter.smooth(mart.res ~ sex)
+#scatter.smooth(mart.res ~ lambda)
+#scatter.smooth(mart.res ~ futime)
+#scatter.smooth(mart.res ~ creatinine)
+
 
 
 
