@@ -1,6 +1,8 @@
 #install.packages('survminer')
 #install.packages('survival')
+install.packages('flexsurv')
 library(survminer)
+library(flexsurv)
 library(survival)
 data("flchain")
 attach(flchain)
@@ -47,8 +49,7 @@ plot(flc.grp_death, col = c('red', 'blue', 'black', 'green', 'purple', 'red', 'b
 # creatinine
 creatinine_quanitle = cut(creatinine, quantile(creatinine, na.rm = T), include.lowest =  T)
 creatinine_death = univariate_km(creatinine_quanitle)
-plot(creatinine_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of creatinine', ylim=c(0.4, 1))
-legend("bottomleft", legend = c("[0.4,0.9]", "(0.9,1]", "(1,1.2]", "(1.2,10.8]"), col = c('red', 'blue', 'black', 'green'), lty = 1:2, horiz = T, cex = 0.8)
+plot(creatinine_death, col = c('red', 'blue', 'black', 'green'), lty = 1:2, xlab = "follow up time", ylab = "estimated S(t)", main = 'Survival function as a function of creatinine', ylim=c(0.4, 1));legend("bottomleft", legend = c("[0.4,0.9]", "(0.9,1]", "(1,1.2]", "(1.2,10.8]"), col = c('red', 'blue', 'black', 'green'), lty = 1:2, horiz = T, cex = 0.8)
 
 
 # mgus
@@ -136,7 +137,7 @@ cox_noph
 
 
 
-#QUESTION 8 #########################################
+### QUESTION 8 #########################################
 
 #this just to show how the resulting scatter plot should be
 #remember that to run the martingale residuals it's needed the model with all the covariates so cox_multi_1
@@ -159,8 +160,26 @@ scatter.smooth(mart.res ~ age)
 #scatter.smooth(mart.res ~ creatinine)
 
 
+### QUESTION 9 ######################################################
+mod_expPH <- flexsurvreg(Surv(futime, death) ~ age + sex + lambda + as.factor(flc.grp), dist="exp", data=flchain)
 
+mod_expPH # complete output
+mod_expPH$res # coefficients
+coef(mod_expPH) # coefficients
+exp(coef(mod_expPH)[1])
+AIC(mod_expPH) # AIC
+logLik(mod_expPH) # log-likelihood
 
+#weibull
+mod_weiPH <- flexsurvreg(Surv(futime, death) ~ age + sex + lambda + as.factor(flc.grp), dist="weibullPH", data=flchain)
+# hazard function monotonically decreasing
+
+mod_weiPH 
+mod_weiPH$res 
+coef(mod_weiPH) 
+exp(coef(mod_weiPH)[1:2])
+AIC(mod_weiPH) 
+logLik(mod_weiPH)
 
 
 
