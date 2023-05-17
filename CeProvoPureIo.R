@@ -1,5 +1,5 @@
-install.packages('survminer')
-install.packages('survival')
+#install.packages('survminer')
+#install.packages('survival')
 library(survminer)
 library(survival)
 data("flchain")
@@ -73,8 +73,8 @@ cox_multi_1
 
 
 ### QUESTION 4 CONF INT
-ggforest(cox_multi, data = flchain)
-summary(cox_multi)$conf.int
+ggforest(cox_multi_1, data = flchain)
+summary(cox_multi_1)$conf.int
 
 
 ### QUESTION 5 VARIABLE SELECTION  ###################################
@@ -106,6 +106,31 @@ plot(ph_test[4], col = 'red', lwd = 4)
 
 ### QUESTION 7   ###################################
 # we do not have variables which violate this the PH assumption
+
+
+#QUESTION 8 #########################################
+
+#this just to show how the resulting scatter plot should be
+#remember that to run the martingale residuals it's needed the model with all the covariates so cox_multi_1
+
+cox_multi_2
+mart.res <- residuals(cox_multi_2, type = "martingale")
+scatter.smooth(mart.res ~ age)
+
+
+#above you can check that the scatter plot present the error value of the different length
+#the martingale residuals should be computed with the complete model 
+#cox_multi_1
+#mart.res <- residuals(cox_multi_1, type = "martingale")
+#scatter.smooth(mart.res ~ age)
+
+
+#scatter.smooth(mart.res ~ sex)
+#scatter.smooth(mart.res ~ lambda)
+#scatter.smooth(mart.res ~ futime)
+#scatter.smooth(mart.res ~ creatinine)
+
+
 
 
 
