@@ -1,11 +1,103 @@
 #install.packages('survminer')
 #install.packages('survival')
-install.packages('flexsurv')
+# install.packages('flexsurv')
 library(survminer)
 library(flexsurv)
+library(mfp)
 library(survival)
 data("flchain")
-attach(flchain)
+data = flchain
+
+### DATA PREPROCESSING
+# Change bad names
+names(data)[names(data) == "sample.yr"] <- 'sample.year'
+names(data)[names(data) == "flc.grp"] <- 'flc.group'
+
+# Adjust abbreviated levels
+levels(data$sex) <- c('Female', 'Male')
+levels(data$sex)
+
+# Cast to Factor
+data$flc.group <- as.factor(data$flc.group)
+
+# Reduce many levels Factor
+sort(table(data$chapter))
+chapter <- c('Circulatory', 'Neoplasms', 'Respiratory', 'Mental', 'Nervous')
+levels(data$chapter)[!levels(data$chapter) %in% chapter] <- 'Others'
+sort(table(data$chapter))
+
+# Convert boolean to Factor
+unique(data$mgus)
+unique(data$death)
+
+data$mgus <- factor(data$mgus,
+                    labels = c('non-mgus', 'mgus'))
+data$death <- factor(data$death,
+                     labels = c('alive', 'dead'))
+
+# convert num to int
+data$age <- as.integer(data$age)
+data$sample.year <- as.integer(data$sample.year)
+data$futime <- as.integer(data$futime)
+
+# Cut variables
+table(data$sample.year)
+data$recruits <- cut(data$sample.year,
+                     breaks = c(1994, 1997, 2000, 2003),
+                     labels = c('early', 'middle', 'late'))
+table(data$recruits)
+
+# Create useful variables
+data <- transform(data,
+                  flc       = kappa + lambda,
+                  flc.ratio = kappa / lambda)
+
+### UNIVARIATE PLOTS
+ggplot(data, aes(age)) +
+  geom_histogram(binwidth = .5)
+
+ggplot(data, aes(sample.year)) +
+  geom_histogram(binwidth = 1)
+
+# Density of samples by epoch
+ggplot(data, aes(recruits, (after_stat(count) / sum(after_stat(count))))) +
+  geom_bar() +
+  ylab('Frequency') +
+  scale_y_continuous(breaks = seq(0, 1, .1))
+
+# Frequency of kappa, lambda and creatinine sera
+ggplot(data) +
+  geom_freqpoly(aes(kappa, color = 'kappa'), binwidth = .1) +
+  geom_freqpoly(aes(lambda, color = 'lambda'), binwidth = .1) +
+  geom_freqpoly(aes(creatinine, color = 'creatinine'),
+                data     = subset(data, !is.na(creatinine)),
+                binwidth = .1) +
+  scale_colour_manual(name   = 'Sera',
+                      breaks = c('creatinine', 'kappa', 'lambda'),
+                      values = c('green', 'red', 'blue')) +
+  xlab('kappa, lambda and creatinine')
+
+# Frequency of kappa, lambda and creatinine sera (log)
+ggplot(data) +
+  geom_freqpoly(aes(log(kappa), color = 'kappa'), binwidth = .1) +
+  geom_freqpoly(aes(log(lambda), color = 'lambda'), binwidth = .1) +
+  geom_freqpoly(aes(log(creatinine),
+                    color = 'creatinine'),
+                data  = subset(data,!is.na(creatinine)),
+                binwidth = .1) +
+  scale_x_continuous(breaks = seq(-4, 4, .5)) +
+  scale_colour_manual(name   = 'Sera',
+                      breaks = c('creatinine', 'kappa', 'lambda'),
+                      values = c('green', 'red', 'blue')) +
+  xlab('Log of creatinine, kappa and lambda')
+
+str(flchain)
+hist(age)
+hist(kappa)
+hist(log(kappa))
+hist(lambda)
+hist(log(lambda))
+hist(flc.grp)
 
 ### QUESTION 1 - UNIVARIATE ANALYSIS ON ALL 
 
@@ -61,7 +153,7 @@ plot(mgus_death, col = c('red', 'blue'), lty = 1:2, xlab = "follow up time", yla
 surv_object = Surv(futime, death)
 
 # complete model
-cox_multi_1 <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + creatinine + mgus)
+cox_multi_1 <- coxph(surv_object ~ age + sex + I(kappa^1) + I(kappa^2) + lambda + as.factor(flc.grp) + creatinine + mgus )
 cox_multi_1
 
 ### QUESTION 3 COMMENTING ############################################
@@ -91,9 +183,11 @@ ggforest(cox_multi_4, data = flchain)
 
 ### QUESTION 6 ###################################
 # identity
-ph_test <- cox.zph(cox_multi_4, transform = "identity")
+ph_test = cox.zph(cox_multi_1, transform = 'identity')
 ph_test
 
+ph_test1 = cox.zph(cox_multi_1, transform = 'log')
+ph_test1
 ''' 
 globally we can notice a small pvalue, indicating that AT LEAST one covariate is not respecting
 H0: all respect proportianal hazard
@@ -101,7 +195,8 @@ with a significance level of 5% we can state that age and lambda does not respec
 '''
 
 plot(ph_test[1], col = 'red', lwd = 4)
-plot(ph_test[3], col = 'red', lwd = 4, ylim=c(0,2))
+plot(ph_test1[1], col = 'red', lwd = 4)
+
 
 # kaplan meyer
 ph_test_2 <- cox.zph(cox_multi_4, transform = "km")
@@ -117,6 +212,7 @@ plot(ph_test_2[3], col = 'red', lwd = 4, ylim=c(0,2))
 
 # logarithm
 ph_test_3 <- cox.zph(cox_multi_4, transform = "log")
+##### remove rows with 0 as 'futime' 
 ph_test_3
 
 '''
@@ -128,13 +224,18 @@ here it is kinda weird as we have all NaN values
 flchain$flc.grp <- as.factor(flchain$flc.grp)
 
 # Run coxph with the updated data types
-cox_noph <- coxph(surv_object ~ age + sex + lambda + flc.grp + 
-                    tt(age) +  tt(sex) + tt(lambda) + tt(flc.grp),
+cox_noph <- coxph(surv_object ~ age + tt(age) + sex + I(kappa^1) + I(kappa^2) 
+                  + lambda + as.factor(flc.grp) + creatinine + mgus ,
                   ties = "breslow",
-                  tt = function(x, t, ...) x * (t))
+                  tt = function(x, t, ...) x * log(t))
+
+cox_noph1 <- coxph(surv_object ~ age + tt(age) + sex + I(kappa^1) + I(kappa^2) 
+                  + lambda + as.factor(flc.grp) + creatinine + mgus ,
+                  ties = "breslow",
+                  tt = function(x, t, ...) x * t)
 
 cox_noph
-
+cox_noph1
 
 
 ### QUESTION 8 #########################################
@@ -144,20 +245,26 @@ cox_noph
 
 cox_multi_2
 mart.res <- residuals(cox_multi_2, type = "martingale")
-scatter.smooth(mart.res ~ age)
+scatter.smooth(mart.res ~ age, main = 'mar.res versus age', col = 'red')
+scatter.smooth(mart.res ~ lambda, main = 'mar.res versus lambda')
+scatter.smooth(mart.res ~ futime, main = 'mar.res versus futime')
+scatter.smooth(mart.res ~ creatinine, main = 'mar.res versus creatinine')
 
 
+cox_mfp <- mfp(Surv(futime, death) ~ fp(age) + sex + fp(kappa) + fp(lambda) + flc.grp + mgus , 
+               family=cox, method="breslow", verbose=T, data=flchain
+               )
+cox_mfp
+cox_mfp$pvalues
 #above you can check that the scatter plot present the error value of the different length
 #the martingale residuals should be computed with the complete model 
+
 #cox_multi_1
 #mart.res <- residuals(cox_multi_1, type = "martingale")
 #scatter.smooth(mart.res ~ age)
 
 
-#scatter.smooth(mart.res ~ sex)
-#scatter.smooth(mart.res ~ lambda)
-#scatter.smooth(mart.res ~ futime)
-#scatter.smooth(mart.res ~ creatinine)
+
 
 
 ### QUESTION 9 ######################################################
