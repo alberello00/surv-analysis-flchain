@@ -70,11 +70,13 @@ ggplot(flchain, aes(sample.year)) +  geom_histogram(binwidth = 1) +
 
 ggplot(flchain, aes(kappa)) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of kappa")
+
 ggplot(flchain, aes(log(kappa))) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of kappa")
 
 ggplot(flchain, aes(lambda)) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of lambda")
+
 ggplot(flchain, aes(log(lambda))) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of lambda")
 

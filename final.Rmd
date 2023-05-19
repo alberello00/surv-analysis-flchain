@@ -1,0 +1,98 @@
+## importing necessary libraries
+
+```{r}
+library(ggplot2)
+library(survminer)
+library(survival)
+library(mfp)
+library(leaps)
+```
+
+## Preliminary analysis
+
+```{r}
+data("flchain")
+```
+
+### Removing `NAs`
+
+```{r}
+colSums(is.na(flchain))
+str(flchain)
+```
+
+from here we can notice that `chapter` has most of NA as values, we are removing such column. Let's see what we can do with `creatinine`.
+
+```{r}
+table(is.na(creatinine), death)
+# chisq.test(table(is.na(creatinine), futime)) 
+tapply(futime, is.na(creatinine), summary)
+```
+
+here we can notice that the follow up time for individuals with or without the value for creatinine is about the same. Therefore, for simplification for what is coming next, we decided to remove such rows.
+
+```{r}
+flchain = flchain[!is.na(flchain$creatinine), ]
+```
+
+finally we set `flc.grp` as a factor
+
+```{r}
+flchain$flc.grp <- as.factor(flchain$flc.grp)
+```
+
+also `sample.yr` is just a variable that states the year of enter into the study for a patient. Clearly from inuition there is no point in dealing with such a variable
+
+```{r}
+flchain = flchain[,- which(names(flchain) %in% c('chapter', 'sample.yr'))]
+attach(flchain)
+```
+
+
+## Univariate charts
+
+### age
+
+```{r}
+ggplot(flchain, aes(age)) + geom_histogram(binwidth = .5) + 
+  ggtitle("Distribution of age") 
+```
+
+### kappa
+
+```{r}
+ggplot(flchain, aes(kappa)) + geom_histogram(binwidth = .5) + 
+  ggtitle("Distribution of kappa")
+```
+this is very right skewed, therefore a transforamtion as the `log()` might come handy. 
+
+```{r}
+ggplot(flchain, aes(log(kappa))) + geom_histogram(binwidth = .5) + 
+  ggtitle("Distribution of log(kappa)")
+```
+this is much more meaningful so we replace such a column
+
+```{r}
+flchain$kappa = log(flchain$kappa)
+names(flchain)[names(flchain) == "kappa"] <- 'log(kappa)'
+```
+
+### lambda
+
+```{r}
+ggplot(flchain, aes(lambda)) + geom_histogram(binwidth = .5) + 
+  ggtitle("Distribution of lambda")
+```
+same reasoning of `kappa`
+
+```{r}
+ggplot(flchain, aes(log(lambda))) + geom_histogram(binwidth = .5) + 
+  ggtitle("Distribution of log(lambda)")
+```
+
+```{r}
+flchain$kappa = log(flchain$kappa)
+names(flchain)[names(flchain) == "lambda"] <- 'log(lambda)'
+```
+
+### 
