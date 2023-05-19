@@ -48,7 +48,6 @@ flchain = flchain[,- which(names(flchain) %in% c('chapter', 'sample.yr'))]
 attach(flchain)
 ```
 
-
 ## Univariate charts
 
 ### age
@@ -64,12 +63,14 @@ ggplot(flchain, aes(age)) + geom_histogram(binwidth = .5) +
 ggplot(flchain, aes(kappa)) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of kappa")
 ```
-this is very right skewed, therefore a transforamtion as the `log()` might come handy. 
+
+this is very right skewed, therefore a transforamtion as the `log()` might come handy.
 
 ```{r}
 ggplot(flchain, aes(log(kappa))) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of log(kappa)")
 ```
+
 this is much more meaningful so we replace such a column
 
 ```{r}
@@ -83,6 +84,7 @@ names(flchain)[names(flchain) == "kappa"] <- 'log(kappa)'
 ggplot(flchain, aes(lambda)) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of lambda")
 ```
+
 same reasoning of `kappa`
 
 ```{r}
@@ -91,8 +93,81 @@ ggplot(flchain, aes(log(lambda))) + geom_histogram(binwidth = .5) +
 ```
 
 ```{r}
-flchain$kappa = log(flchain$kappa)
+flchain$lambda = log(flchain$lambda)
 names(flchain)[names(flchain) == "lambda"] <- 'log(lambda)'
 ```
 
-### 
+### creatinine
+
+```{r}
+ggplot(flchain, aes(creatinine)) + geom_histogram(binwidth = .5) + 
+  ggtitle("Distribution of creatinine") #the plot itself removes the NA
+```
+
+```{r}
+ggplot(flchain, aes(log(creatinine))) + geom_histogram(binwidth = .5) +
+  ggtitle("Distribution of creatinine") ##the plot itself removes the NA
+```
+
+```{r}
+flchain$creatinine = log(flchain$creatinine)
+names(flchain)[names(flchain) == "creatinine"] <- 'log(creatinine)'
+```
+
+## Univariate analysis
+
+```{r}
+surv_object <- Surv(futime, death)
+```
+
+## age
+
+```{r}
+age_q <- cut(age, quantile(age), include.lowest =  T)
+age_death <- survfit(surv_object ~ age_q, conf.type = "log-log")
+ggsurvplot(age_death, data = flchain, main="risk of death for different age quantile", 
+           risk.table = TRUE)
+```
+
+## sex
+
+```{r}
+sex_death <- survfit(surv_object ~ sex, conf.type = "log-log")
+ggsurvplot(sex_death, data = flchain, main="risk of death for different age quantile",
+           risk.table = TRUE)
+```
+
+### log(kappa)
+
+```{r}
+kappa_q = cut(log(kappa), quantile(log(kappa)), include.lowest =  T)
+kappa_death <- survfit(surv_object ~ kappa_q, conf.type = "log-log")
+ggsurvplot(kappa_death, data = flchain, main="risk of death for different log(kappa) quantile", risk.table = TRUE)
+```
+
+### log(lambda)
+
+```{r}
+lambda_q = cut(log(lambda), quantile(log(lambda)), include.lowest =  T)
+lambda_death <- survfit(surv_object ~ lambda_q, conf.type = "log-log")
+ggsurvplot(lambda_death, data = flchain, main="risk of death for different lambda quantile")
+```
+
+### log(creatinine)
+
+```{r}
+creat_q = cut(log(creatinine), quantile(log(creatinine), na.rm = T), include.lowest =  T)
+creatinine_death <- survfit(surv_object ~ creat_q, conf.type = "log-log")
+ggsurvplot(creatinine_death, data = flchain, main="risk of death for different log(creatinine) quantile")
+```
+### flc.grp
+```{r}
+flc_death <- survfit(surv_object ~ flc.grp, conf.type = "log-log")
+ggsurvplot(flc_death, data = flchain, main="risk of death for different flc")
+```
+### mgus
+```{r}
+mgus_death <- survfit(surv_object ~ mgus, conf.type = "log-log")
+ggsurvplot(mgus_death, data = flchain,  main="risk of death for different mgus value")
+```
+
