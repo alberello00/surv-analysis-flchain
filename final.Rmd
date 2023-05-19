@@ -120,7 +120,7 @@ names(flchain)[names(flchain) == "creatinine"] <- 'log(creatinine)'
 surv_object <- Surv(futime, death)
 ```
 
-## age
+### age
 
 ```{r}
 age_q <- cut(age, quantile(age), include.lowest =  T)
@@ -129,7 +129,7 @@ ggsurvplot(age_death, data = flchain, main="risk of death for different age quan
            risk.table = TRUE)
 ```
 
-## sex
+### sex
 
 ```{r}
 sex_death <- survfit(surv_object ~ sex, conf.type = "log-log")
