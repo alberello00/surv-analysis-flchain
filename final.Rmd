@@ -1,4 +1,4 @@
-## importing necessary libraries
+# Importing necessary libraries
 
 ```{r}
 library(ggplot2)
@@ -8,25 +8,25 @@ library(mfp)
 library(leaps)
 ```
 
-## Preliminary analysis
+# Preliminary analysis
 
 ```{r}
 data("flchain")
 ```
 
-### Removing `NAs`
+## Removing `NAs`
 
 ```{r}
 colSums(is.na(flchain))
 str(flchain)
 ```
 
-from here we can notice that `chapter` has most of NA as values, we are removing such column. Let's see what we can do with `creatinine`.
+from here we can notice that `chapter` has most of `NA` as values, we are removing such column. Let's see what we can do with `creatinine`.
 
 ```{r}
-table(is.na(creatinine), death)
+table(is.na(flchain$creatinine), flchain$death)
 # chisq.test(table(is.na(creatinine), futime)) 
-tapply(futime, is.na(creatinine), summary)
+tapply(flchain$futime, is.na(flchain$creatinine), summary)
 ```
 
 here we can notice that the follow up time for individuals with or without the value for creatinine is about the same. Therefore, for simplification for what is coming next, we decided to remove such rows.
@@ -35,29 +35,39 @@ here we can notice that the follow up time for individuals with or without the v
 flchain = flchain[!is.na(flchain$creatinine), ]
 ```
 
-finally we set `flc.grp` as a factor
+finally we set `flc.grp`, `mgus`, `death` as a factor
 
 ```{r}
 flchain$flc.grp <- as.factor(flchain$flc.grp)
+flchain$mgus <- as.factor(flchain$mgus)
+# flchain$death <- as.factor(flchain$death)
 ```
 
 also `sample.yr` is just a variable that states the year of enter into the study for a patient. Clearly from inuition there is no point in dealing with such a variable
 
 ```{r}
 flchain = flchain[,- which(names(flchain) %in% c('chapter', 'sample.yr'))]
-attach(flchain)
 ```
 
-## Univariate charts
+another thing to fix is the fact that sometime we have `0` as follow up time, meaning that the patitent has died in the day he/she entered the study
+```{r}
+flchain[flchain$futime == 0,]
+flchain = flchain[flchain$futime != 0, ]
+log.flchain = flchain
+```
 
-### age
+we are now ready to go
+
+# Univariate charts
+
+## age
 
 ```{r}
 ggplot(flchain, aes(age)) + geom_histogram(binwidth = .5) + 
   ggtitle("Distribution of age") 
 ```
 
-### kappa
+## kappa
 
 ```{r}
 ggplot(flchain, aes(kappa)) + geom_histogram(binwidth = .5) + 
@@ -74,11 +84,11 @@ ggplot(flchain, aes(log(kappa))) + geom_histogram(binwidth = .5) +
 this is much more meaningful so we replace such a column
 
 ```{r}
-flchain$kappa = log(flchain$kappa)
-names(flchain)[names(flchain) == "kappa"] <- 'log(kappa)'
+log.flchain$kappa = log(log.flchain$kappa)
+names(log.flchain)[names(log.flchain) == "kappa"] <- 'log.kappa'
 ```
 
-### lambda
+## lambda
 
 ```{r}
 ggplot(flchain, aes(lambda)) + geom_histogram(binwidth = .5) + 
@@ -93,11 +103,11 @@ ggplot(flchain, aes(log(lambda))) + geom_histogram(binwidth = .5) +
 ```
 
 ```{r}
-flchain$lambda = log(flchain$lambda)
-names(flchain)[names(flchain) == "lambda"] <- 'log(lambda)'
+log.flchain$lambda = log(log.flchain$lambda)
+names(log.flchain)[names(log.flchain) == "lambda"] <- 'log.lambda'
 ```
 
-### creatinine
+## creatinine
 
 ```{r}
 ggplot(flchain, aes(creatinine)) + geom_histogram(binwidth = .5) + 
@@ -110,55 +120,61 @@ ggplot(flchain, aes(log(creatinine))) + geom_histogram(binwidth = .5) +
 ```
 
 ```{r}
-flchain$creatinine = log(flchain$creatinine)
-names(flchain)[names(flchain) == "creatinine"] <- 'log(creatinine)'
+log.flchain$creatinine = log(log.flchain$creatinine)
+names(log.flchain)[names(log.flchain) == "creatinine"] <- 'log.creatinine'
 ```
 
-## Univariate analysis
+## summary for categorical
 
 ```{r}
-surv_object <- Surv(futime, death)
+summary(flchain)
 ```
 
+
+# Univariate analysis
+
+```{r}
+surv_object <- Surv(flchain$futime, flchain$death)
+```
+
+## Plots
 ### age
 
 ```{r}
-age_q <- cut(age, quantile(age), include.lowest =  T)
+age_q <- cut(flchain$age, quantile(flchain$age), include.lowest =  T)
 age_death <- survfit(surv_object ~ age_q, conf.type = "log-log")
-ggsurvplot(age_death, data = flchain, main="risk of death for different age quantile", 
-           risk.table = TRUE)
+ggsurvplot(age_death, data = flchain, main="risk of death for different age quantile")
 ```
 
 ### sex
 
 ```{r}
-sex_death <- survfit(surv_object ~ sex, conf.type = "log-log")
-ggsurvplot(sex_death, data = flchain, main="risk of death for different age quantile",
-           risk.table = TRUE)
+sex_death <- survfit(surv_object ~ flchain$sex, conf.type = "log-log")
+ggsurvplot(sex_death, data = flchain, main="risk of death for different age quantile")
 ```
 
-### log(kappa)
+### log.kappa
 
 ```{r}
-kappa_q = cut(log(kappa), quantile(log(kappa)), include.lowest =  T)
+kappa_q = cut(flchain$kappa, quantile(flchain$kappa), include.lowest =  T)
 kappa_death <- survfit(surv_object ~ kappa_q, conf.type = "log-log")
-ggsurvplot(kappa_death, data = flchain, main="risk of death for different log(kappa) quantile", risk.table = TRUE)
+ggsurvplot(kappa_death, data = flchain, main="risk of death for different kappa quantile")
 ```
 
-### log(lambda)
+### log.lambda
 
 ```{r}
-lambda_q = cut(log(lambda), quantile(log(lambda)), include.lowest =  T)
+lambda_q = cut(flchain$lambda, quantile(flchain$lambda), include.lowest =  T)
 lambda_death <- survfit(surv_object ~ lambda_q, conf.type = "log-log")
 ggsurvplot(lambda_death, data = flchain, main="risk of death for different lambda quantile")
 ```
 
-### log(creatinine)
+### log.creatinine
 
 ```{r}
-creat_q = cut(log(creatinine), quantile(log(creatinine), na.rm = T), include.lowest =  T)
+creat_q = cut(flchain$creatinine, quantile(flchain$creatinine, na.rm = T), include.lowest =  T)
 creatinine_death <- survfit(surv_object ~ creat_q, conf.type = "log-log")
-ggsurvplot(creatinine_death, data = flchain, main="risk of death for different log(creatinine) quantile")
+ggsurvplot(creatinine_death, data = flchain, main="risk of death for different log.creatinine quantile")
 ```
 ### flc.grp
 ```{r}
@@ -170,4 +186,97 @@ ggsurvplot(flc_death, data = flchain, main="risk of death for different flc")
 mgus_death <- survfit(surv_object ~ mgus, conf.type = "log-log")
 ggsurvplot(mgus_death, data = flchain,  main="risk of death for different mgus value")
 ```
+
+## logrank
+In the following the imp quantity will be be `pval`. A small `pvalue` indicates that the differences are *significative*.
+```{r}
+survdiff(surv_object ~ age_q) #there are differences between the classes
+survdiff(surv_object ~ sex) #no differences
+survdiff(surv_object ~ kappa_q) #differences
+survdiff(surv_object ~ lambda_q) #differences
+survdiff(surv_object ~ flc.grp) #differences
+survdiff(surv_object ~ creat_q) #differences
+survdiff(surv_object ~ mgus) #differences
+```
+To know if the difference between the observed and expected events (O-E) for one group is significantly different from 0 (that is, the two groups have significantly different hazard functions), you need an estimate of the variance of that difference in the case that the groups have the same hazard function (null hypothesis).
+At each time of an event, the variance in the expected number of events for a group is related to the expected number of events for the group at that time, the number of cases still at risk both overall and in the group at that time, and the number of total observed events at that time
+
+## wikoxon
+```{r}
+survdiff(surv_object ~ age_q, rho=1) #there are differences between the classes
+survdiff(surv_object ~ sex, rho=1) #no differences
+survdiff(surv_object ~ kappa_q, rho=1) #differences
+survdiff(surv_object ~ lambda_q, rho=1) #differences
+survdiff(surv_object ~ flc.grp, rho=1) #differences
+survdiff(surv_object ~ creat_q, rho=1) #differences
+survdiff(surv_object ~ mgus, rho=1) #differences
+```
+# Cox regression model
+```{r}
+mod1 <- coxph(surv_object ~ age + sex + kappa + lambda + flc.grp + creatinine + mgus, data = flchain)
+mod1
+```
+the significative variables are: `age`, `sex`, `log(kappa)`, `log(lambda)`, all `flc.grpX` except for `flc.grp3`
+we can say that the hazard ratio:
+- increases 10% each additional year `age`
+- increases of 24% if `sex` is Male
+- increases of 47% for each increment of the `log(kappa)`
+- increases of 49% for each increment of the `log(lambda)`
+- decreases of variable amounts depending on `flc.grp`
+
+# Testing for linearity
+
+```{r}
+mod1
+mart.res <- residuals(mod1, type = "martingale")
+scatter.smooth(mart.res ~ flchain$age, main = 'mar.res versus age', col = 'red')
+scatter.smooth(mart.res ~ flchain$kappa, main = 'mar.res versus log(kappa)', col = 'red')
+scatter.smooth(mart.res ~ flchain$lambda, main = 'mar.res versus log(lambda)', col = 'red')
+scatter.smooth(mart.res ~ flchain$creatinine, main = 'mar.res versus log(creatinine)', col = 'red')
+```
+
+```{r}
+
+cox_mfp1 <- mfp(Surv(flchain$futime, flchain$death) ~ fp(age) + sex + fp(log.kappa) + fp(log.lambda) + fp(log.creatinine) + flc.grp + mgus, family=cox, method="breslow", data = log.flchain, maxits = 60)
+cox_mfp1
+```
+```{r}
+mod2 = survfit(surv_object ~ I((age/100)^1) + sex + I(((log.kappa+4.7)/10)^3)+I(((log.kappa+4.7)/10)^3*log(((log.kappa+4.7)/10))) +
+                 	I(((log.lambda+3.2)/10)^1)+I(((log.lambda+3.2)/10)^2) +
+                 log((log.creatinine+1))+I((log.creatinine+1)^0.5) +
+                 flc.grp + mgus, data = flchain
+               )
+
+mod2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
