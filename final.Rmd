@@ -10,6 +10,8 @@ library(leaps)
 
 # Preliminary analysis
 
+Import the dataset used for the analysis
+
 ```{r}
 data("flchain")
 ```
@@ -40,7 +42,7 @@ finally we set `flc.grp`, `mgus`, `death` as a factor
 ```{r}
 flchain$flc.grp <- as.factor(flchain$flc.grp)
 flchain$mgus <- as.factor(flchain$mgus)
-# flchain$death <- as.factor(flchain$death)
+#flchain$death <- as.factor(flchain$death)
 ```
 
 also `sample.yr` is just a variable that states the year of enter into the study for a patient. Clearly from inuition there is no point in dealing with such a variable
@@ -145,6 +147,7 @@ age_q <- cut(flchain$age, quantile(flchain$age), include.lowest =  T)
 age_death <- survfit(surv_object ~ age_q, conf.type = "log-log")
 ggsurvplot(age_death, data = flchain, main="risk of death for different age quantile")
 ```
+In the plot above it's possible to see that as age increases over time, the likelihood of survival decreases.
 
 ### sex
 
@@ -152,44 +155,50 @@ ggsurvplot(age_death, data = flchain, main="risk of death for different age quan
 sex_death <- survfit(surv_object ~ flchain$sex, conf.type = "log-log")
 ggsurvplot(sex_death, data = flchain, main="risk of death for different age quantile")
 ```
-
+Here we can notice that the variable of sex does not impact the likelihood of survival among the two genders.
 ### log.kappa
 
 ```{r}
-kappa_q = cut(flchain$kappa, quantile(flchain$kappa), include.lowest =  T)
+kappa_q = cut(log.flchain$log.kappa, quantile(log.flchain$log.kappa), include.lowest =  T)
 kappa_death <- survfit(surv_object ~ kappa_q, conf.type = "log-log")
-ggsurvplot(kappa_death, data = flchain, main="risk of death for different kappa quantile")
+ggsurvplot(kappa_death, data = log.flchain, main="risk of death for different log.kappa quantile")
 ```
+Higher values of kappa, in particular for the last quantile considered, correspond to a lower probability of surviving over the time.
 
 ### log.lambda
 
 ```{r}
-lambda_q = cut(flchain$lambda, quantile(flchain$lambda), include.lowest =  T)
+lambda_q = cut(log.flchain$log.lambda, quantile(log.flchain$log.lambda), include.lowest =  T)
 lambda_death <- survfit(surv_object ~ lambda_q, conf.type = "log-log")
-ggsurvplot(lambda_death, data = flchain, main="risk of death for different lambda quantile")
+ggsurvplot(lambda_death, data = log.flchain, main="risk of death for log.different lambda quantile")
 ```
+Same conclusion of log.kappa for log.lambda.
 
 ### log.creatinine
 
 ```{r}
-creat_q = cut(flchain$creatinine, quantile(flchain$creatinine, na.rm = T), include.lowest =  T)
+creat_q = cut(log.flchain$log.creatinine, quantile(log.flchain$log.creatinine, na.rm = T), include.lowest =  T)
 creatinine_death <- survfit(surv_object ~ creat_q, conf.type = "log-log")
-ggsurvplot(creatinine_death, data = flchain, main="risk of death for different log.creatinine quantile")
+ggsurvplot(creatinine_death, data = log.flchain, main="risk of death for different log.creatinine quantile")
 ```
+Here we can see that the last quantile behave different from the others, indicating that high values of creatinine increase the probability of death among the population
+
+
 ### flc.grp
 ```{r}
-flc_death <- survfit(surv_object ~ flc.grp, conf.type = "log-log")
+flc_death <- survfit(surv_object ~ flchain$flc.grp, conf.type = "log-log")
 ggsurvplot(flc_death, data = flchain, main="risk of death for different flc")
 ```
 ### mgus
 ```{r}
-mgus_death <- survfit(surv_object ~ mgus, conf.type = "log-log")
+mgus_death <- survfit(surv_object ~ flchain$mgus, conf.type = "log-log")
 ggsurvplot(mgus_death, data = flchain,  main="risk of death for different mgus value")
 ```
 
 ## logrank
 In the following the imp quantity will be be `pval`. A small `pvalue` indicates that the differences are *significative*.
 ```{r}
+attach(flchain)
 survdiff(surv_object ~ age_q) #there are differences between the classes
 survdiff(surv_object ~ sex) #no differences
 survdiff(surv_object ~ kappa_q) #differences
@@ -197,6 +206,7 @@ survdiff(surv_object ~ lambda_q) #differences
 survdiff(surv_object ~ flc.grp) #differences
 survdiff(surv_object ~ creat_q) #differences
 survdiff(surv_object ~ mgus) #differences
+detach(flchain)
 ```
 To know if the difference between the observed and expected events (O-E) for one group is significantly different from 0 (that is, the two groups have significantly different hazard functions), you need an estimate of the variance of that difference in the case that the groups have the same hazard function (null hypothesis).
 At each time of an event, the variance in the expected number of events for a group is related to the expected number of events for the group at that time, the number of cases still at risk both overall and in the group at that time, and the number of total observed events at that time
